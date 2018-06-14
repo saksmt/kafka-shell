@@ -1,0 +1,26 @@
+version: '3'
+services:
+    zk:
+        image: wurstmeister/zookeeper
+        ports:
+            - "2181:2181"
+    kafka:
+        image: wurstmeister/kafka
+        environment:
+            KAFKA_ADVERTISED_HOST_NAME: "localhost"
+            KAFKA_ZOOKEEPER_CONNECT: "zk"
+        expose:
+            - "9092"
+        ports:
+            - "9092:9092"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    zman:
+        image: guras256/zman:1.0.0.SNAPSHOT
+        links:
+            - kafka
+        ports:
+            - "8888:8080"
+
+# vim: ts=4 sw=4 et

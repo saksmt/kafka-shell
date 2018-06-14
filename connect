@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cd $(realpath $(dirname $0))
+
+kafkaContainerId=$(docker-compose ps -q kafka)
+
+docker cp .shell $kafkaContainerId:/
+
+docker-compose exec kafka /bin/bash --rcfile /.shell -i
+
