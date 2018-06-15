@@ -77,10 +77,11 @@ function __consume() {
 }
 
 function __publish() {
-    kPublish="/opt/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092"
+    kPublishScript="/opt/kafka/bin/kafka-console-producer.sh"
+    kPublish="${kPublishScript} --broker-list localhost:9092"
     if [[ "$1" == "" ]]; then
         alias raw="$kPublish --topic "
-        alias with-key="kPublish=$kPublish __publishWithKey"
+        alias with-key='kPublish="'"${kPublishScript}"'" __publishWithKey'
     else
         unalias raw
         unalias with-key
@@ -88,17 +89,18 @@ function __publish() {
 }
 
 function __publishWithKey() {
-    topic=$1
-    key=$2
+    key=$1
+    topic=$2
     message=$(mktemp)
-    boundary="::$(cat /dev/urandom | base64 -w200 | grep -vP '(=|/|\+)' | head -c20)::"
+    boundary="::$(cat /dev/urandom | base64 | grep -v '=' | grep -v '+' | grep -v '/' | head -c20)::"
 
     # generating message in right format
     echo -n ${key} > ${message}
-    echo -n ${boundary} > ${message}
-    cat > ${message}
+    echo -n ${boundary} >> ${message}
+    cat >> ${message}
     
-    cat ${message} | $kPublish --property "parse.key=true" --property "key.separator=${boundary}"
+    cat ${message} | $kPublish --property "parse.key=true" --property "key.separator=${boundary}" --topic ${topic} --broker-list localhost:9092
+
     rm -f ${message}
 }
 
