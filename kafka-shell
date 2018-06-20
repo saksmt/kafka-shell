@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 
+cd $(dirname $(readlink -f $0))
+
 if [[ "$1" != "" ]]; then
     export SERVER="$1"
 fi
 
-bash --rcfile .kafka-shell-rcscript -i
+if [[ -e /usr/local/etc/kafka-shell/config ]]; then
+    source /usr/local/etc/kafka-shell/config
+fi
+
+rcFile=./.kafka-shell-rcscript
+if [[ "${LIB_FILE}" != "" ]]; then
+    rcFile="${LIB_FILE}"
+fi
+
+bash --rcfile $rcFile -i
+
+# vim: sw=4 ts=4 et

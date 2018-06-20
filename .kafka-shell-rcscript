@@ -9,8 +9,13 @@ if [[ "${KAFKA_BINDIR}" != "" ]]; then
     kafkaBin=${KAFKA_BINDIR}
 fi
 
-if [[ "${SERVER}" != "" ]] && [[ -e "/usr/local/etc/kafka-shell/servers/${SERVER}" ]]; then
-    source /usr/local/etc/kafka-shell/servers/${SERVER}
+if [[ "${SERVER}" != "" ]]; then
+    if [[ -e "/usr/local/etc/kafka-shell/servers/${SERVER}" ]]; then
+        source /usr/local/etc/kafka-shell/servers/${SERVER}
+    else
+        echo -e ' \033[31m*\033[0m Unknown server '${SERVER}'!'
+        SERVER=
+    fi
 fi
 
 if [[ "${ZK}" == "" ]]; then
