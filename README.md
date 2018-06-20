@@ -29,6 +29,10 @@ And finally get your kafka shell:
 ./connect-to-shell
 ```
 
+### Bonus!
+
+As a bonus you'll get [wonderful zookeeper client](https://github.com/peterservice-rnd/zman) on 8888 port
+
 ## Shell usage
 
 There are 3 contexts:
