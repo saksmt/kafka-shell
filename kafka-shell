@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ "$1" != "" ]]; then
+    export SERVER="$1"
+fi
+
+bash --rcfile .kafka-shell-rcscript -i

@@ -1,10 +1,48 @@
 #!/usr/bin/env bash
 
-export PS1="kfk> "
-export ZK="zk:2181"
+if [[ -e "/usr/local/etc/kafka-shell/config" ]]; then
+    source /usr/local/etc/kafka-shell/config
+fi
+
+kafkaBin="/opt/kafka/bin"
+if [[ "${KAFKA_BINDIR}" != "" ]]; then
+    kafkaBin=${KAFKA_BINDIR}
+fi
+
+if [[ "${SERVER}" != "" ]] && [[ -e "/usr/local/etc/kafka-shell/servers/${SERVER}" ]]; then
+    source /usr/local/etc/kafka-shell/servers/${SERVER}
+fi
+
+if [[ "${ZK}" == "" ]]; then
+    export ZK="zk:2181"
+fi
+
+if [[ "${BOOTSTRAP_SERVER}" == "" ]]; then
+    export BOOTSTRAP_SERVER="localhost:9091"
+fi
+
+if [[ "${BROKER}" == "" ]]; then
+    export BROKER="${BOOTSTRAP_SERVER}"
+fi
 
 context=
 contextAliasFunc=
+
+function __setupPS1() {
+    serverName=
+    if [[ "${SERVER}" != "" ]]; then
+        serverName=":${SERVER}"
+    fi
+
+    contextName=
+    if [[ "$context" != "" ]]; then
+        contextName=" (${context})"
+    fi
+
+    export PS1="kafka${serverName}${contextName}> "
+}
+
+__setupPS1
 
 function __ctx_func() {
     contextName=$1
@@ -24,7 +62,7 @@ function __ctx_func() {
         contextAliasFunc=$_contextAliasFunc
         context=$contextName
 
-        export PS1="kfk ($context)> "
+        __setupPS1
         $contextAliasFunc
         
         if [[ "$#" != "0" ]]; then
@@ -37,12 +75,7 @@ function __ctx_func() {
             context=$lastContext
             contextAliasFunc=$lastContextAliasFunc
 
-            # normalizing PS1
-            if [[ "$context" == "" ]]; then
-                export PS1="kfk> "
-            else
-                export PS1="kfk ($context)> "
-            fi
+            __setupPS1
 
             # re-applying old aliases
             $contextAliasFunc
@@ -51,7 +84,7 @@ function __ctx_func() {
 }
 
 function __topics() {
-    kTopics="/opt/kafka/bin/kafka-topics.sh --zookeeper zk:2181"
+    kTopics="${kafkaBin}/kafka-topics.sh --zookeeper ${ZK}"
     if [[ "$1" == "" ]]; then
         alias list="$kTopics --list"
         alias describe="$kTopics --describe --topic "
@@ -66,7 +99,7 @@ function __topics() {
 }
 
 function __consume() {
-    kConsume="/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092"
+    kConsume="${kafkaBin}/kafka-console-consumer.sh --bootstrap-server ${BOOTSTRAP_SERVER}"
     if [[ "$1" == "" ]]; then
         alias all-from="$kConsume --from-beginning --topic "
         alias latest-from="$kConsumer --topic "
@@ -77,8 +110,8 @@ function __consume() {
 }
 
 function __publish() {
-    kPublishScript="/opt/kafka/bin/kafka-console-producer.sh"
-    kPublish="${kPublishScript} --broker-list localhost:9092"
+    kPublishScript="$kafkaBin/kafka-console-producer.sh"
+    kPublish="${kPublishScript} --broker-list ${BROKER}"
     if [[ "$1" == "" ]]; then
         alias raw="$kPublish --topic "
         alias with-key='kPublish="'"${kPublishScript}"'" __publishWithKey'
@@ -99,7 +132,7 @@ function __publishWithKey() {
     echo -n ${boundary} >> ${message}
     cat >> ${message}
     
-    cat ${message} | $kPublish --property "parse.key=true" --property "key.separator=${boundary}" --topic ${topic} --broker-list localhost:9092
+    cat ${message} | $kPublish --property "parse.key=true" --property "key.separator=${boundary}" --topic ${topic} --broker-list ${BROKER}
 
     rm -f ${message}
 }
