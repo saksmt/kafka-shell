@@ -1,9 +1,70 @@
 #!/usr/bin/env bash
 
+function listServers {
+    find /usr/local/etc/kafka-shell/servers -type f | sed 's/\/usr\/local\/etc\/kafka-shell\/servers\///'
+}
+
+function showServer {
+    serverPath=/usr/local/etc/kafka-shell/servers/$1
+    if ! [[ -e "${serverPath}" ]]; then
+        echo "Server "'"'$1'"'" does not exist!" >&2
+        return
+    fi
+
+    source /usr/local/etc/kafka-shell/config
+    source $serverPath
+
+    echo "Zookeeper: $ZK"
+    echo "Bootstrap server: $BOOTSTRAP_SERVER"
+}
+
+function printHelp {
+    echo "kafka-shell <list|show|connect> [options]"
+    echo 
+    echo "Options:"
+    echo "  -h, --help - Show this help"
+    echo
+    echo "Modes:"
+    echo "  list - list available saved servers"
+    echo "  show <server> - show saved server"
+    echo "  connect [server] - connect to server, either by loading saved server or from environment"
+    echo
+    echo "Captured environment:"
+    echo "  ZK - zookeeper server to connect to"
+    echo "  BOOTSTRAP_SERVER - bootstrap server to connect to"
+    echo
+    echo "Note that saved server will have precedence over passed enviroment"
+}
+
 cd $(dirname $(readlink -f $0))
 
-if [[ "$1" != "" ]]; then
-    export SERVER="$1"
+OPTS=`getopt -o h --long help -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ]; then echo "Failed to parse options. Use -h to view help." >&2; exit 1; fi
+
+eval set -- "$OPTS"
+
+while true; do
+    case "$1" in
+        -h | --help ) printHelp; exit 0 ;;
+        -- ) shift; break ;;
+        * ) break ;;
+    esac
+done
+
+SERVER=
+
+while (( $# > 0 )); do
+    case "$1" in 
+        list ) listServers; exit 0 ;;
+        show ) showServer $2; exit 0 ;;
+        connect ) SERVER="$2"; shift 2 ;;
+        * ) echo "Unknown argument: $1. Try kafka-shell --help to see help." >&2; exit 1 ;;
+    esac
+done
+
+if [[ "${SERVER}" != "" ]]; then
+    export SERVER
 fi
 
 if [[ -e /usr/local/etc/kafka-shell/config ]]; then

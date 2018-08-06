@@ -2,6 +2,19 @@
 
 Bash-based kafka shell requiring only linux, core-utils, bash & original kafka scripts
 
+## Prerequisites
+
+### Usage in docker
+
+1. Docker
+2. Well, that's it
+
+### Standalone usage
+
+1. Bash
+2. Local installation of kafka (kafka's shell scripts required)
+3. GNU getopt
+
 ## Quickstart
 
 If you searched through internet looking for some simple out-of-the-box kafka, I must congrat you! You've
@@ -86,7 +99,7 @@ To connect to some kafka you'll need addresses of:
 3. Broker (optional, defaults to bootstrap server)
 
 ```bash
-ZK='zookeeperHost:2181' BOOTSTRAP_SERVER='kafkaBootstrapServer:9091' BROKER='brokerHost:9091'  kafka-shell
+ZK='zookeeperHost:2181' BOOTSTRAP_SERVER='kafkaBootstrapServer:9091' BROKER='brokerHost:9091'  kafka-shell connect
 ```
 
 You can also store your servers under `/usr/local/etc/kafka-shell/servers` directory in following format:
@@ -101,8 +114,13 @@ BOOTSTRAP_SERVER='localhost:9091'
 And then you can quickly connect to your saved kafka:
 
 ```bash
-kafka-shell localhost
+kafka-shell connect localhost
 ```
+
+If you have lots of servers you may find these commands useful:
+
+ - `kafka-shell list` - list all available servers
+ - `kafka-shell show <server>` - show server's connect options
 
 # License
 
